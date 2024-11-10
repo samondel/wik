@@ -1,0 +1,27 @@
+[package]
+name = "wik"
+version = "0.1.0"
+authors = ["Mustafa Barodawala"]
+edition = "2021"
+description = "A Wikipedia browser in the terminal, for inquisitive the CLI power-user."
+
+[dependencies]
+crossterm = "0.28.1"
+digest = "0.10.7"
+dirs = "5.0.1"
+rand = "0.8.5"
+reqwest = { version = "0.12.9", features = ["blocking", "json"] }
+serde = { version = "1.0.214", features = ["derive"] }
+serde_json = "1.0.132"
+sha2 = "0.10.8"
+substring = "1.4.5"
+# tokio = { version = "1.41.0", features = ["full"] }
+tui = "0.19.0"
+# crossterm = "*"
+# tui = "*"
+# # futures-io = "0.3.31"
+# reqwest = { version = "*", features = ["blocking", "json"] }
+# serde = { version = "*", features = ["derive"] }
+# serde_json = "*"
+# substring = "*"
+# tokio = "1.41.0"
