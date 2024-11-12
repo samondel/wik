@@ -15,6 +15,7 @@ use crate::{
 pub struct SearchResult {
     pub title: String,
     pub extract: String,
+    pub index: i32,
 }
 
 
@@ -64,7 +65,11 @@ pub fn get_wikipedia_query(
     };
 
     match query_response {
-        Some(response) => Ok(response.query.pages.values().cloned().collect()),
+        Some(response) => {
+            let mut sorted_response: Vec<SearchResult> = response.query.pages.values().cloned().collect();
+            sorted_response.sort_by(|a, b| a.index.cmp(&b.index));
+            return Ok(sorted_response);
+        }
         None => Err("Could not get the query".into()),
     }
 }
