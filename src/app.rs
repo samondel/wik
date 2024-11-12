@@ -1,15 +1,14 @@
-use crate::caching::CachingSession;
 use crate::wikipedia::SearchResult;
-use std::fmt;
+use crate::{caching::CachingSession, utils::Shared};
 
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{Arc, Mutex};
 
 pub struct App {
     pub input: String,
-    pub results: Arc<Mutex<Vec<SearchResult>>>,
+    pub results: Shared<Vec<SearchResult>>,
     pub cursor_pos: usize,
-    pub is_loading_query: Arc<Mutex<bool>>,
-    pub cache: Arc<Mutex<CachingSession>>,
+    pub is_loading_query: Shared<bool>,
+    pub cache: Shared<CachingSession>,
 }
 
 impl Default for App {
@@ -34,14 +33,6 @@ impl App {
             Ok(is_loading) => !(*is_loading),
             Err(_) => false,
         }
-    }
-
-    pub fn start_search(&self) {
-        *self.is_loading_query.lock().unwrap() = true;
-    }
-
-    pub fn stop_search(&self) {
-        *self.is_loading_query.lock().unwrap() = false;
     }
 
     pub fn scroll_results(&self, delta: i8) {
@@ -74,21 +65,4 @@ impl App {
     }
 }
 
-/* impl fmt::Display for App {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // let results = *self.results.lock().unwrap();
-        write!(
-            f,
-            "App\n\tinput: {}\n\tresults: {}",
-            self.input,
-            self.results
-                .lock()
-                .unwrap()
-                .iter()
-                .map(|r| r.title.to_owned())
-                .collect::<Vec<String>>()
-                .join(", ")
-        )
-    }
-}
- */
+// pub type ConcurrentApp = Arc<Mutex<App>>;

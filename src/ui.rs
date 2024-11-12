@@ -1,10 +1,7 @@
 use std::sync::{MutexGuard, TryLockError, TryLockResult};
 
 use crate::app::App;
-use crate::styles::{
-    cursor_style, highlighted_snippet_style, highlighted_title_style, unhighlighted_snippet_style,
-    unhighlighted_title_style,
-};
+use crate::styles::{cursor_style, highlighted_title_style, unhighlighted_title_style};
 use tui::widgets::Wrap;
 use tui::{
     backend::Backend,
@@ -18,9 +15,6 @@ use tui::{
 use crate::wikipedia::SearchResult;
 
 use substring::Substring;
-
-const OPENING_TAG: &str = "<span class=\"searchmatch\">";
-const CLOSING_TAG: &str = "</span>";
 
 pub fn draw<'a, B: Backend>(frame: &mut Frame<B>, app: &App) {
     let chunks = Layout::default()

@@ -1,34 +1,30 @@
 use std::{
+    collections::HashMap,
     error::Error,
-    fs::{self, OpenOptions},
-    io,
-    path::{Path, PathBuf},
+    fs::{self, File},
+    io::{self, BufReader, Write},
+    path::PathBuf,
 };
 
-use digest::{generic_array::GenericArray, Digest};
 use dirs::home_dir;
 use rand::{distributions::Alphanumeric, Rng};
-use reqwest::header::SEC_WEBSOCKET_EXTENSIONS;
-use serde::{Deserialize, Serialize};
-use sha2::{Sha256, Sha512};
+use serde::{de::DeserializeOwned, Serialize};
+use sha2::{Digest, Sha256};
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct CacheEntry {
-    url: String,
-    file_name: String,
-}
+pub type Url = String;
+pub type FileName = String;
 
 #[derive(Debug)]
 pub struct CachingSession {
-    pub lookup_table: Vec<CacheEntry>,
+    pub lookup_table: HashMap<Url, FileName>,
     pub session_name: String,
 }
 
 impl Default for CachingSession {
     fn default() -> Self {
         Self {
-            lookup_table: Default::default(),
-            session_name: Default::default(),
+            lookup_table: HashMap::new(),
+            session_name: String::from("session_name"),
         }
     }
 }
@@ -46,6 +42,10 @@ impl CachingSession {
         session
     }
 
+    pub fn has_url(&self, url: &Url) -> bool {
+        self.lookup_table.contains_key(url)
+    }
+
     fn cache_dir() -> PathBuf {
         home_dir().unwrap().join(Self::WIK_DIR)
     }
@@ -59,6 +59,50 @@ impl CachingSession {
         self.session_cache_dir().join(file_name)
     }
 
+    pub fn write_to_cache<T: Serialize>(
+        &mut self,
+        url: &Url,
+        serializable_object: T,
+    ) -> Result<(), Box<dyn Error>> {
+        let file_name = create_hash(url);
+
+        let file_path = self.get_cache_file_path(&file_name);
+
+        if let Some(parent) = file_path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+
+        let mut file = File::create(file_path)?;
+
+        let json_data = serde_json::to_string(&serializable_object)?;
+        file.write_all(json_data.as_bytes())?;
+
+        self.lookup_table.insert(url.clone(), file_name);
+
+        Ok(())
+    }
+
+    pub fn get_from_cache<T: DeserializeOwned>(&self, url: &Url) -> Option<T> {
+        match self.lookup_table.get(url) {
+            Some(file_name) => {
+                // get from the file system
+                let file_result = File::options()
+                    .read(true)
+                    .write(false)
+                    .open(self.get_cache_file_path(file_name));
+                if let Err(_) = file_result {
+                    return None;
+                } else {
+                    let reader = BufReader::new(file_result.unwrap());
+                    match serde_json::from_reader::<_, T>(reader) {
+                        Ok(deserialized_object) => Some(deserialized_object),
+                        Err(_) => None,
+                    }
+                }
+            }
+            None => None,
+        }
+    }
     pub fn clear_caches() -> io::Result<()> {
         match fs::remove_dir_all(Self::cache_dir()) {
             Ok(_) => match fs::create_dir(Self::cache_dir()) {
@@ -79,41 +123,5 @@ impl CachingSession {
 fn create_hash(msg: &str) -> String {
     let mut hasher = Sha256::default();
     hasher.update(msg);
-    format!("{:X}", hasher.finalize())
+    format!("{:x}", hasher.finalize()).as_str()[0..10].to_string()
 }
-/*
-pub fn save_dummy_lookup() -> Result<(), Box<dyn Error>> {
-    let mut cache_entries = Vec::new();
-
-    let dummy_1 = CacheEntry {
-        url: "url1".to_string(),
-        file_name: "file_name1".to_string(),
-    };
-    cache_entries.push(dummy_1);
-
-    let cache_path = get_cache_file_path();
-
-    let file = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .open(&cache_path)?;
-
-    serde_json::to_writer(file, &cache_entries)?;
-
-    Ok(())
-}
-*/
-
-// pub fn use_cache<T: DeserializeOwned + Serialize>(url: &str) -> Result<T, Box<dyn Error>> {
-// 1. Try to find if file is saved somewhere, looking up url to find if a json file for it exists
-// 2. If the json file exists, open and deserialize it, return it
-// 3. If not, make the GET request, save the json in the response, and return the corresponding object
-
-// let file_path = match get_file_path_for_url(url) {
-
-// }
-// // let file_result = File::create(file_path);
-
-// // serde_json::to_writer_pretty(file?, search_response)
-// let response = client.get(&request_url).send()?.json::<T>()?;
-// }

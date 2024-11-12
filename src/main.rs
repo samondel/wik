@@ -2,6 +2,7 @@ mod app;
 mod caching;
 mod styles;
 mod ui;
+mod utils;
 mod wikipedia;
 
 use crate::app::App;
@@ -11,16 +12,12 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use std::{
-    error::Error,
-    thread,
-    time::{Duration, Instant},
-};
-use std::{io, sync::Mutex};
+use std::io;
+use std::{error::Error, time::Duration};
 use tui::backend::CrosstermBackend;
 use tui::Terminal;
 
-use std::sync::Arc;
+const APP_REFRESH_TIME_MILLIS: u64 = 16;
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Setup terminal
@@ -36,7 +33,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     loop {
         terminal.draw(|f| ui::draw(f, &app))?;
 
-        if event::poll(Duration::from_millis(50))? {
+        if event::poll(Duration::from_millis(APP_REFRESH_TIME_MILLIS))? {
             if let Event::Key(key) = event::read()? {
                 match key.code {
                     KeyCode::Esc => break, // Exit on Esc
@@ -58,28 +55,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         }
                     }
                     KeyCode::Enter => {
-                        // let mut app = app.lock().unwrap();
-                        // Spawn a new thread to perform search and update results
-
-                        if app.input.len() > 0 {
-                            if app.is_this_lockable() {
-                                // let app_clone = Arc::clone(&app).lock().unwrap();
-                                // app_clone.start_search();
-                                *app.is_loading_query.lock().unwrap() = true;
-                                let loading_flag = Arc::clone(&app.is_loading_query);
-                                let app_results = Arc::clone(&app.results);
-                                let caching_session = Arc::clone(&app.cache);
-                                let input = app.input.clone();
-                                thread::spawn(move || {
-                                    if let Ok(results) =
-                                        wikipedia::get_wikipedia_query(input.as_str())
-                                    {
-                                        *app_results.lock().unwrap() = results;
-                                        *loading_flag.lock().unwrap() = false;
-                                    }
-                                });
-                            }
-                        }
+                        wikipedia::load_wikipedia_search_query_to_app(&app);
                     }
                     KeyCode::Left if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         app.move_cursor_to_start();
@@ -122,9 +98,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         DisableMouseCapture
     )?;
 
-    // let session = CachingSession::new();
-    // println!("{:?}", session.get_cache_file_path("filename.json"));
-    // CachingSession::clear_caches()?;
-    // std::fs::create_dir_all(session.get_cache_file_path("filename.json"))?;
+    CachingSession::clear_caches()?;
     Ok(())
 }
