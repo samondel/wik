@@ -251,15 +251,24 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn prompt_for_size() -> Result<(u16, u16), std::io::Error> {
-    let mut buffer = String::new();
     eprintln!("Unable to automatically determine console dimensions.");
-    eprint!("Enter number of columns: ");
-    io::stdin().read_line(&mut buffer)?;
-    let width:u16 = buffer.trim_end().parse().unwrap();
-    buffer.clear();
-    eprint!("Enter number of rows: ");
-    io::stdin().read_line(&mut buffer)?;
-    let height:u16 = buffer.trim_end().parse().unwrap();
+    let width = get_dimension("columns");
+    let height = get_dimension("rows");
     return Ok((width, height))
 }
 
+fn get_dimension(dimension_name:&str) -> u16 {
+    let mut buffer = String::new();
+    loop {
+        eprint!("Enter number of {}: ", dimension_name);
+        io::stdin().read_line(&mut buffer).unwrap();
+        match buffer.trim_end().parse::<u16>() {
+            Ok(dimension) => return dimension,
+            Err(_e) => {
+                println!("Invalid input, please enter a positive integer.");
+                buffer.clear();
+                continue;
+            },
+        };
+    };
+}
