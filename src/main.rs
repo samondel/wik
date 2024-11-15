@@ -13,7 +13,7 @@ use caching::CachingSession;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyModifiers},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{size, disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use htmd::HtmlToMarkdown;
 use std::{
@@ -23,18 +23,29 @@ use std::{
 };
 use std::{fs::File, io};
 use tui::backend::CrosstermBackend;
-use tui::Terminal;
+use tui::layout::Rect;
+use tui::{Terminal, TerminalOptions, Viewport};
 
 const APP_REFRESH_TIME_MILLIS: u64 = 16;
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Setup terminal
+    let mut fixed_size = false;
+    let mut size = size()?;
+    if size.0 < 1 || size.1 < 1 {
+        fixed_size = true;
+        size = prompt_for_size()?;
+    }
+
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
-
+    let area = Rect::new(0, 0, size.0, size.1);
+    let mut terminal = match fixed_size {
+        true => Terminal::with_options(backend, TerminalOptions{viewport: Viewport::fixed(area)})?,
+        false => Terminal::new(backend)?,
+    };
     let mut app = App::new();
     app.is_running = true;
 
@@ -238,3 +249,17 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+fn prompt_for_size() -> Result<(u16, u16), std::io::Error> {
+    let mut buffer = String::new();
+    eprintln!("Unable to automatically determine console dimensions.");
+    eprint!("Enter number of columns: ");
+    io::stdin().read_line(&mut buffer)?;
+    let width:u16 = buffer.trim_end().parse().unwrap();
+    buffer.clear();
+    eprint!("Enter number of rows: ");
+    io::stdin().read_line(&mut buffer)?;
+    let height:u16 = buffer.trim_end().parse().unwrap();
+    return Ok((width, height))
+}
+
