@@ -16,10 +16,10 @@ use crate::wikipedia::SearchResult;
 
 use substring::Substring;
 
-pub fn draw<'a, B: Backend>(frame: &mut Frame<B>, app: &App) {
+pub fn draw<'a, B: Backend>(frame: &mut Frame<B>, app: &App, margin: u16) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .margin(2)
+        .margin(margin)
         .constraints([Constraint::Length(3), Constraint::Min(0)].as_ref())
         .split(frame.size());
 
