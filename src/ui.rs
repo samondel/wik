@@ -8,7 +8,7 @@ use tui::{
     layout::{Constraint, Direction, Layout},
     style::{Color, Style},
     text::{Span, Spans},
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, Borders, Paragraph, BorderType},
     Frame,
 };
 
@@ -16,7 +16,7 @@ use crate::wikipedia::SearchResult;
 
 use substring::Substring;
 
-pub fn draw<'a, B: Backend>(frame: &mut Frame<B>, app: &App, margin: u16) {
+pub fn draw<'a, B: Backend>(frame: &mut Frame<B>, app: &App, margin: u16, ascii: bool) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .margin(margin)
@@ -29,6 +29,8 @@ pub fn draw<'a, B: Backend>(frame: &mut Frame<B>, app: &App, margin: u16) {
     let pre_highlight = input_text.substring(0, app.cursor_pos);
     let highlight_char = input_text.substring(app.cursor_pos, app.cursor_pos + 1);
     let post_highlight = input_text.substring(app.cursor_pos + 1, input_text.len());
+    let mut border_type = BorderType::Plain;
+    if ascii { border_type = BorderType::ASCII };
     let input = Paragraph::new(vec![Spans::from(vec![
         Span::raw(pre_highlight),
         Span::styled(highlight_char, cursor_style()),
@@ -38,6 +40,7 @@ pub fn draw<'a, B: Backend>(frame: &mut Frame<B>, app: &App, margin: u16) {
     .block(
         Block::default()
             .borders(Borders::ALL)
+            .border_type(border_type)
             .title("Search Wikipedia"),
     );
 
@@ -61,7 +64,7 @@ pub fn draw<'a, B: Backend>(frame: &mut Frame<B>, app: &App, margin: u16) {
         frame.render_widget(
             Paragraph::new("Loading...")
                 .style(Style::default().fg(Color::Yellow))
-                .block(Block::default().borders(Borders::ALL).title("Results")),
+                .block(Block::default().borders(Borders::ALL).border_type(border_type).title("Results")),
             chunks[1],
         );
     }
@@ -100,7 +103,7 @@ pub fn draw<'a, B: Backend>(frame: &mut Frame<B>, app: &App, margin: u16) {
             // Create the Paragraph widget
             frame.render_widget(
                 Paragraph::new(spans)
-                    .block(Block::default().borders(Borders::ALL).title("Results"))
+                    .block(Block::default().borders(Borders::ALL).border_type(border_type).title("Results"))
                     .wrap(Wrap { trim: true }),
                 chunks[1],
             );

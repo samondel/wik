@@ -25,10 +25,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut fixed_size = false;
     let mut size = size()?;
     let mut margin:u16 = 2;
+    let mut ascii = false;
     if size.0 < 1 || size.1 < 1 {
         fixed_size = true;
         size = prompt_for_size()?;
         margin = get_dimension("margin size");
+        ascii = true;
     }
 
     enable_raw_mode()?;
@@ -44,7 +46,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Main loop
     loop {
-        terminal.draw(|f| ui::draw(f, &app, margin))?;
+        terminal.draw(|f| ui::draw(f, &app, margin, ascii))?;
 
         if event::poll(Duration::from_millis(APP_REFRESH_TIME_MILLIS))? {
             if let Event::Key(key) = event::read()? {
