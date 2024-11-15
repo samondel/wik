@@ -32,9 +32,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Setup terminal
     let mut fixed_size = false;
     let mut size = size()?;
+    let mut margin:u16 = 2;
     if size.0 < 1 || size.1 < 1 {
         fixed_size = true;
         size = prompt_for_size()?;
+        margin = get_dimension("margin size");
     }
 
     enable_raw_mode()?;
@@ -54,7 +56,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         if !app.is_running {
             break;
         }
-        terminal.draw(|f| ui::draw(f, &app))?;
+        terminal.draw(|f| ui::draw(f, &app, margin))?;
 
         if event::poll(Duration::from_millis(APP_REFRESH_TIME_MILLIS))? {
             if let Event::Key(key) = event::read()? {
@@ -260,7 +262,7 @@ fn prompt_for_size() -> Result<(u16, u16), std::io::Error> {
 fn get_dimension(dimension_name:&str) -> u16 {
     let mut buffer = String::new();
     loop {
-        eprint!("Enter number of {}: ", dimension_name);
+        eprint!("Enter {}: ", dimension_name);
         io::stdin().read_line(&mut buffer).unwrap();
         match buffer.trim_end().parse::<u16>() {
             Ok(dimension) => return dimension,
