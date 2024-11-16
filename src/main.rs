@@ -27,12 +27,13 @@ use tui::layout::Rect;
 use tui::{Terminal, TerminalOptions, Viewport};
 
 const APP_REFRESH_TIME_MILLIS: u64 = 16;
+const APP_DEFAULT_MARGIN: u16 = 2;
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Setup terminal
     let mut fixed_size = false;
     let mut size = size()?;
-    let mut margin:u16 = 2;
+    let mut margin:u16 = APP_DEFAULT_MARGIN;
     if size.0 < 1 || size.1 < 1 {
         fixed_size = true;
         size = prompt_for_size()?;
