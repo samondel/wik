@@ -25,6 +25,7 @@ use std::{fs::File, io};
 use tui::backend::CrosstermBackend;
 use tui::layout::Rect;
 use tui::{Terminal, TerminalOptions, Viewport};
+use dialoguer::Input;
 
 const APP_REFRESH_TIME_MILLIS: u64 = 16;
 const APP_DEFAULT_MARGIN: u16 = 2;
@@ -261,17 +262,18 @@ fn prompt_for_size() -> Result<(u16, u16), std::io::Error> {
 }
 
 fn get_dimension(dimension_name:&str) -> u16 {
-    let mut buffer = String::new();
     loop {
-        eprint!("Enter {}: ", dimension_name);
-        io::stdin().read_line(&mut buffer).unwrap();
-        match buffer.trim_end().parse::<u16>() {
+        let input: String = Input::new()
+            .with_prompt(format!("Enter {}", dimension_name))
+            .interact_text()
+            .unwrap();
+        match input.as_str().parse::<u16>() {
             Ok(dimension) => return dimension,
             Err(_e) => {
-                println!("Invalid input, please enter a positive integer.");
-                buffer.clear();
+                eprintln!("Invalid input, please enter a positive integer.");
                 continue;
             },
         };
     };
 }
+
