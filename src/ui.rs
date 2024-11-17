@@ -118,9 +118,10 @@ fn search_box_widget<'a>(
     let text_block = if title.len() > 0 {
         Block::default()
             .borders(Borders::ALL)
+            .border_type(if app.ascii { BorderType::ASCII } else { BorderType::Plain })
             .title(title.to_owned())
     } else {
-        Block::default().borders(Borders::ALL)
+        Block::default().borders(Borders::ALL).border_type(if app.ascii { BorderType::ASCII } else { BorderType::Plain })
     };
     Paragraph::new(vec![Spans::from(vec![
         Span::raw(pre_highlight.to_owned()),
@@ -164,6 +165,7 @@ pub fn draw_search<'a, B: Backend>(frame: &mut Frame<B>, app: &App, margin: u16)
     .block(
         Block::default()
             .borders(Borders::ALL)
+            .border_type(if app.ascii { BorderType::ASCII } else { BorderType::Plain })
             .title("Search Wikipedia"),
     );
     */
@@ -227,7 +229,7 @@ pub fn draw_search<'a, B: Backend>(frame: &mut Frame<B>, app: &App, margin: u16)
             frame.render_widget(
                 Paragraph::new(all_spans)
                     .style(result_block_style)
-                    .block(Block::default().borders(Borders::ALL).title("Results"))
+                    .block(Block::default().borders(Borders::ALL).border_type(if app.ascii { BorderType::ASCII } else { BorderType::Plain }).title("Results"))
                     .wrap(Wrap { trim: true }),
                 result_chunks[0],
             );
@@ -249,7 +251,7 @@ pub fn draw_search<'a, B: Backend>(frame: &mut Frame<B>, app: &App, margin: u16)
             frame.render_widget(
                 Paragraph::new(Span::styled(waiting_message, app.theme.loading()))
                     .style(result_block_style)
-                    .block(Block::default().borders(Borders::ALL).title("Results")),
+                    .block(Block::default().borders(Borders::ALL).border_type(if app.ascii { BorderType::ASCII } else { BorderType::Plain}).title("Results")),
                 chunks[1],
             );
         }
@@ -282,7 +284,7 @@ fn draw_menu<'a, B: Backend>(frame: &mut Frame<B>, app: &App, menu: &MenuState) 
     frame.render_widget(
         Paragraph::new(menu_items)
             .style(app.theme.block_border_focus())
-            .block(Block::default().borders(Borders::ALL).title("Menu"))
+            .block(Block::default().borders(Borders::ALL).border_type(if app.ascii { BorderType::ASCII } else { BorderType::Plain }).title("Menu"))
             .alignment(Alignment::Center),
         area,
     );
@@ -302,7 +304,7 @@ fn draw_credit<B: Backend>(frame: &mut Frame<'_, B>, app: &App) {
     frame.render_widget(
         Paragraph::new(credit_paragraph_text)
             .style(app.theme.block_border_focus())
-            .block(Block::default().borders(Borders::ALL).title("Credit"))
+            .block(Block::default().borders(Borders::ALL).border_type(if app.ascii { BorderType::ASCII } else { BorderType::Plain }).title("Credit"))
             .alignment(Alignment::Center),
         area,
     );
@@ -321,7 +323,7 @@ fn draw_title<B: Backend>(frame: &mut Frame<'_, B>, app: &App) {
             .block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .border_type(BorderType::Double),
+                    .border_type(if app.ascii { BorderType::ASCII } else { BorderType::Double })
             )
             .alignment(Alignment::Center),
         title_areas[0],
@@ -406,6 +408,7 @@ fn draw_article<B: Backend>(frame: &mut Frame<'_, B>, app: &App) {
             .block(
                 Block::default()
                     .borders(Borders::ALL)
+                    .border_type(if app.ascii { BorderType::ASCII } else { BorderType::Plain })
                     .title(app.article.article_name.clone()),
             )
             .wrap(Wrap { trim: true }),

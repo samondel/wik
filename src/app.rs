@@ -294,6 +294,7 @@ pub struct App {
     pub is_running: bool,
     pub state: AppState,
     pub theme: Theme,
+    pub ascii: bool,
 }
 
 impl Default for App {
@@ -333,6 +334,7 @@ impl Default for App {
             is_running: false,
             state: AppState::Title,
             theme: Theme::default(),
+            ascii: false,
         };
 
         app.search_menu.options = vec![

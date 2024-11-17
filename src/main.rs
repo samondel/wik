@@ -35,10 +35,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut fixed_size = false;
     let mut size = size()?;
     let mut margin:u16 = APP_DEFAULT_MARGIN;
+    let mut ascii = false;
     if size.0 < 1 || size.1 < 1 {
         fixed_size = true;
         size = prompt_for_size()?;
         margin = get_dimension("margin size");
+        ascii = get_bool("ASCII");
     }
 
     enable_raw_mode()?;
@@ -52,6 +54,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
     let mut app = App::new();
     app.is_running = true;
+    app.ascii = ascii;
 
     // Main loop
     loop {
@@ -274,6 +277,26 @@ fn get_dimension(dimension_name:&str) -> u16 {
                 continue;
             },
         };
+    };
+}
+
+fn get_bool(bool_name:&str) -> bool {
+    loop {
+        let mut input: String = Input::new()
+            .with_prompt(bool_name)
+            .interact_text()
+            .unwrap();
+        input.make_ascii_lowercase();
+        match input.as_str() {
+                "y" => return true,
+                "yes" => return true,
+                "n" => return false,
+                "no" => return false,
+                _ => {
+                    eprintln!("Enter Y or N.");
+                    continue;
+                },
+            };
     };
 }
 
